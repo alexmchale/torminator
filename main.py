@@ -11,17 +11,12 @@ import ConfigParser
 
 
 def main():
-  try:
-    torrent_server = TorrentServer("/home/amchale/.torminator.conf")
+  torrent_server = TorrentServer("/home/amchale/.torminator.conf")
 
-    restful_server = HTTPServer(('', 3001), RestfulHandler)
-    restful_server.torrent_server = torrent_server
+  restful_server = HTTPServer(('', 3001), RestfulHandler)
+  restful_server.torrent_server = torrent_server
 
-    restful_server.serve_forever()
-    
-  except KeyboardInterrupt:
-    print '^C received, shutting down server.'
-    restful_server.socket.close()
+  restful_server.serve_forever()
 
 
 
