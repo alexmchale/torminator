@@ -90,9 +90,15 @@ class RestfulHandler(BaseHTTPRequestHandler):
   # Updates configuration settings.
   def do_PUT(self):
     (name, args) = self.parse_query()
+    response = { 'code': 200, 'old': {}, 'new': {} }
 
-    for key, value in args:
-      self.torrent_server.set(key, value)
+    for key, value in args.items():
+      response['old'][key] = self.torrent_server.set(key, value)
+      response['new'][key] = value
+
+    self.send_response(200)
+    self.end_headers()
+    self.wfile.write(json.dumps(response))
 
 
   # Parses a URL query field into a request name and an argument hash.
@@ -295,18 +301,25 @@ class TorrentServer:
 
 
   # Applies the new key/value if specified, then applies the current settings to the torrent session.
+  # Returns the old key value.
   def set(self, key = None, value = None):
-    if key: self.settings[key] = value
+    return_value = None
+
+    if key: 
+      if self.settings.has_key(key): return_value = self.settings[key]
+      self.settings[key] = value
 
     config = ConfigParser.SafeConfigParser()
     config.add_section('Torminator')
-    for key, value in self.settings:
+    for key, value in self.settings.items():
       config.set('Torminator', key, value)
 
     with open(self.config_file, 'wb') as configfile:
       config.write(configfile)
 
     self.apply_settings()
+
+    return return_value
 
 
   # If the given field is set in the settings hash, call the given method on it.
