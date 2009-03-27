@@ -168,24 +168,80 @@ class TorrentServer:
 
     return ti.name()
 
+
   # Remove the torrent with the given name from the server.
   def remove(self, torrent_name):
     h = self.find(torrent_name)
-    if h: self.session.remove_torrent(h)
+
+    if h:
+      self.session.remove_torrent(h)
+      return True
+
+    return False
+
 
   # Prepare a hash with the current status of this server.
   def status(self):
+    ss = self.session.status()
+    print dir(ss)
+
     return {
+      'session': {
+        'has_incoming_connections': ss.has_incoming_connections,
+
+        'upload_rate': ss.upload_rate,
+        'download_rate': ss.download_rate,
+
+        'payload_upload_rate': ss.payload_upload_rate,
+        'payload_download_rate': ss.payload_download_rate,
+
+        'total_upload': ss.total_upload,
+        'total_download': ss.total_download,
+
+        'total_payload_download': ss.total_payload_download,
+        'total_payload_upload': ss.total_payload_upload,
+
+        'num_peers': ss.num_peers
+      },
+
       'settings': self.settings,
       'torrents': [self.handle_status(h) for h in self.session.get_torrents()]
     }
 
     return status
 
+
   # Prepare a hash with the current status of the given torrent handle.
   def handle_status(self, h):
+    hs = h.status()
+
     status = { 
       'name': h.name(), 
+
+      'state': str(hs.state),
+      'paused': hs.paused,
+      'progress': hs.progress,
+      'error': hs.error,
+
+      'current_tracker': hs.current_tracker,
+
+      'total_download': hs.total_download,
+      'total_upload': hs.total_upload,
+
+      'total_payload_download': hs.total_payload_download,
+      'total_payload_upload': hs.total_payload_upload,
+
+      'total_failed_bytes': hs.total_failed_bytes,
+      'total_redundant_bytes': hs.total_redundant_bytes,
+
+      'download_rate': hs.download_rate,
+      'upload_rate': hs.upload_rate,
+
+      'download_payload_rate': hs.download_payload_rate,
+      'upload_payload_rate': hs.upload_payload_rate,
+
+      'num_peers': hs.num_peers,
+
       'files': [] 
     }
 
@@ -199,10 +255,12 @@ class TorrentServer:
 
     return status
 
+
   # Returns an array of tuples about this handle's files (Name, Progress, Priority).
   def handle_files(self, h):
     ti = h.get_torrent_info()
-    return zip(ti.files(), h.file_progress(), h.file_priorities)
+    return zip(ti.files(), h.file_progress(), h.file_priorities())
+
 
   # Search the active handles for a torrent with the given name.
   def find(self, torrent_name):
