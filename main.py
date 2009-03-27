@@ -73,11 +73,18 @@ class RestfulHandler(BaseHTTPRequestHandler):
   # Remove the given torrent from the server.
   def do_DELETE(self):
     (name, args) = self.parse_query()
+    response = {}
 
-    self.torrent_server.remove(name)
+    if self.torrent_server.remove(name):
+      response['code'] = 200
+      response['message'] = 'The torrent was successfully removed.'
+    else:
+      response['code'] = 200
+      response['error_message'] = 'That torrent was not found.'
 
-    self.send_response(200)
+    self.send_response(response['code'])
     self.end_headers()
+    self.wfile.write(json.dumps(response))
 
 
   # Updates configuration settings.
