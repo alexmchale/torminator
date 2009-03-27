@@ -157,7 +157,7 @@ class TorrentServer:
 
     torrent_params = {
       'ti':        ti,
-      'save_path': '.'
+      'save_path': self.settings['save_path']
     }
 
     h = self.session.add_torrent(torrent_params)
@@ -213,10 +213,12 @@ class TorrentServer:
 
     return None
 
+
   # Applies the values in the settings hash to the current session.
   def apply_settings(self):
     self.if_set(self.session.set_upload_rate_limit, int, 'upload_rate_limit')
     self.if_set(self.session.set_download_rate_limit, int, 'download_rate_limit')
+
 
   # Reads the settings in the current session into the settings hash.
   def read_settings(self):
@@ -224,10 +226,15 @@ class TorrentServer:
 
     config = ConfigParser.SafeConfigParser()
     config.read(self.config_file)
+
     for key, value in config.items('Torminator'):
       self.settings[key] = value
 
+    if not self.settings.has_key('save_path'):
+      self.settings['save_path'] = '/tmp'
+
     self.apply_settings()
+
 
   # Applies the new key/value if specified, then applies the current settings to the torrent session.
   def set(self, key = None, value = None):
@@ -243,10 +250,12 @@ class TorrentServer:
 
     self.apply_settings()
 
+
   # If the given field is set in the settings hash, call the given method on it.
   def if_set(self, func, cast, key):
     if self.settings.has_key(key):
       func(cast(self.settings[key]))
+
 
   # Fill the given field with the result of the given method unless it's already set.
   def set_unless(self, key, func):
