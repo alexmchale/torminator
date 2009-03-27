@@ -8,6 +8,8 @@ import re
 import json
 import ConfigParser
 
+
+
 def main():
   try:
     torrent_server = TorrentServer("/home/amchale/.torminator.conf")
@@ -20,15 +22,6 @@ def main():
   except KeyboardInterrupt:
     print '^C received, shutting down server.'
     server.socket.close()
-
-
-
-class RestfulClient(Thread):
-  def __init__(self, *args):
-    pass
-
-  def run(self):
-    pass
 
 
 
