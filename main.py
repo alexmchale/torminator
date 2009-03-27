@@ -21,7 +21,7 @@ def main():
     
   except KeyboardInterrupt:
     print '^C received, shutting down server.'
-    server.socket.close()
+    restful_server.socket.close()
 
 
 
