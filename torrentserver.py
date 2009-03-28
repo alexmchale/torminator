@@ -10,6 +10,12 @@ import ConfigParser
 
 
 
+def search(func, list):
+  searchfunc = lambda z, x: z or (func(x) and x) or None
+  return reduce(searchfunc, list, None)
+
+
+
 class TorrentServer:
   def __init__(self, config_file):
     FIRST_TORRENT_PORT = 6881
@@ -43,9 +49,14 @@ class TorrentServer:
       priorities = [files_to_include.count(f) and 1 or 0 for f in ti.files()]
       h.prioritize_files(priorities)
 
+    if not search(lambda t: t['name'] == ti.name(), self.settings['torrents']):
+      self.settings['torrents'].append({ 'name': ti.name(), 'url': torrent_url, 'files': files_to_include })
+    self.write_settings()
+
     return ti.name()
 
 
+  # Returns information about the torrent at the given URL.
   def files_in(self, torrent_url):
     torrent_raw = urllib.urlopen(torrent_url).read()
     ti = lt.torrent_info(torrent_raw, len(torrent_raw))
@@ -59,8 +70,12 @@ class TorrentServer:
 
   # Remove the torrent with the given name from the server.
   def remove(self, torrent_name):
-    h = self.find(torrent_name)
+    t = search(lambda t: t['name'] == ti.name(), self.settings['torrents'])
+    if t:
+      self.settings['torrents'].remove(t)
+    self.write_settings()
 
+    h = self.find(torrent_name)
     if h:
       self.session.remove_torrent(h)
       return True
@@ -152,12 +167,7 @@ class TorrentServer:
 
   # Search the active handles for a torrent with the given name.
   def find(self, torrent_name):
-    if torrent_name:
-      for h in self.session.get_torrents():
-        if h.name() == torrent_name:
-          return h
-
-    return None
+    return search(lambda h: h.name() == torrent_name, self.session.get_torrents())
 
 
   # Applies the values in the settings hash to the current session.
@@ -168,16 +178,22 @@ class TorrentServer:
 
   # Reads the settings in the current session into the settings hash.
   def read_settings(self):
-    self.settings = {}
-
-    config = ConfigParser.SafeConfigParser()
-    config.read(self.config_file)
-
-    for key, value in config.items('Torminator'):
-      self.settings[key] = value
+    with open(self.config_file, 'r+') as file:
+      self.settings = json.loads(file.read())
 
     if not self.settings.has_key('save_path'):
       self.settings['save_path'] = '/tmp'
+
+    if not self.settings.has_key('torrents'):
+      self.settings['torrents'] = []
+
+    self.apply_settings()
+
+
+  # Write the current settings in memory out to disk.
+  def write_settings(self):
+    with open(self.config_file, 'wb') as file:
+      file.write(json.dumps(self.settings))
 
     self.apply_settings()
 
@@ -192,21 +208,8 @@ class TorrentServer:
       self.settings[key] = value
 
     self.write_settings()
-    self.apply_settings()
 
     return return_value
-
-
-  # Write the current settings in memory out to disk.
-  def write_settings(self):
-    config = ConfigParser.SafeConfigParser()
-
-    config.add_section('Torminator')
-    for key, value in self.settings.items():
-      config.set('Torminator', key, value)
-
-    with open(self.config_file, 'wb') as configfile:
-      config.write(configfile)
 
 
   # If the given field is set in the settings hash, call the given method on it.
