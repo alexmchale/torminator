@@ -22,8 +22,10 @@ class RestfulHandler(BaseHTTPRequestHandler):
 
   # Get prompts for the status of the server.
   def do_GET(self):
-    (name, args) = self.parse_query()
-    status = self.torrent_server.status()
+    status = {}
+
+    try:    status = self.torrent_server.files_in(self.path)
+    except: status = self.torrent_server.status()
 
     self.send_response(200)
     self.end_headers()

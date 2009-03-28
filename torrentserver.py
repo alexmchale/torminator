@@ -46,6 +46,17 @@ class TorrentServer:
     return ti.name()
 
 
+  def files_in(self, torrent_url):
+    torrent_raw = urllib.urlopen(torrent_url).read()
+    ti = lt.torrent_info(torrent_raw, len(torrent_raw))
+
+    return { 
+      'name': ti.name(), 
+      'size': ti.total_size(), 
+      'files': [ { 'path': f.path, 'size': f.size } for f in ti.files()]
+    }
+
+
   # Remove the torrent with the given name from the server.
   def remove(self, torrent_name):
     h = self.find(torrent_name)
