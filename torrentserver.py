@@ -7,6 +7,7 @@ from urlparse import urlparse
 import re
 import json
 import ConfigParser
+import os
 
 
 
@@ -40,7 +41,7 @@ class TorrentServer:
 
     torrent_params = {
       'ti':        ti,
-      'save_path': self.settings['save_path']
+      'save_path': str(self.settings['save_path'])
     }
 
     h = self.session.add_torrent(torrent_params)
@@ -178,13 +179,21 @@ class TorrentServer:
 
   # Reads the settings in the current session into the settings hash.
   def read_settings(self):
-    with open(self.config_file, 'r+') as file:
-      self.settings = json.loads(file.read())
+    if os.path.isfile(self.config_file):
+      with open(self.config_file, 'r') as file:
+        self.settings = json.loads(file.read())
+    else:
+      self.settings = {}
 
     if not self.settings.has_key('save_path'):
       self.settings['save_path'] = '/tmp'
 
-    if not self.settings.has_key('torrents'):
+    if self.settings.has_key('torrents'):
+      for t in self.settings['torrents']:
+        print t
+        h = self.find(t['name'])
+        if not h: self.add(t['url'], t['files'])
+    else:
       self.settings['torrents'] = []
 
     self.apply_settings()
