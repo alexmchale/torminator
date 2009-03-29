@@ -87,7 +87,6 @@ class TorrentServer:
   # Prepare a hash with the current status of this server.
   def status(self):
     ss = self.session.status()
-    print dir(ss)
 
     return {
       'session': {
@@ -118,9 +117,11 @@ class TorrentServer:
   # Prepare a hash with the current status of the given torrent handle.
   def handle_status(self, h):
     hs = h.status()
+    ti = h.get_torrent_info() 
 
     status = { 
       'name': h.name(), 
+      'size': ti.total_size(),
 
       'state': str(hs.state),
       'paused': hs.paused,
@@ -190,7 +191,6 @@ class TorrentServer:
 
     if self.settings.has_key('torrents'):
       for t in self.settings['torrents']:
-        print t
         h = self.find(t['name'])
         if not h: self.add(t['url'], t['files'])
     else:
