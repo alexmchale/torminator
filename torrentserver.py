@@ -47,7 +47,7 @@ class TorrentServer:
     h = self.session.add_torrent(torrent_params)
 
     if len(files_to_include) > 0:
-      priorities = [files_to_include.count(f) and 1 or 0 for f in ti.files()]
+      priorities = [files_to_include.count(f.path) and 1 or 0 for f in ti.files()]
       h.prioritize_files(priorities)
 
     if not search(lambda t: t['name'] == ti.name(), self.settings['torrents']):
