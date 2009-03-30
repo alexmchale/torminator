@@ -58,7 +58,7 @@ class TorrentServer:
 
 
   # Returns information about the torrent at the given URL.
-  def files_in(self, torrent_url):
+  def torrent_at_url(self, torrent_url):
     torrent_raw = urllib.urlopen(torrent_url).read()
     ti = lt.torrent_info(torrent_raw, len(torrent_raw))
 

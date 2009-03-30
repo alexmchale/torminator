@@ -23,10 +23,21 @@ class RestfulHandler(BaseHTTPRequestHandler):
   # Get prompts for the status of the server.
   def do_GET(self):
     (name, args) = self.parse_query()
-    status = {}
 
-    try:    status = self.torrent_server.files_in(name)
-    except: status = self.torrent_server.status()
+    handle = self.torrent_server.find(name)
+
+    if handle:
+      try:    
+        status = self.torrent_server.handle_status(handle)
+      except:
+        status = { 'code': 400, 'error_message': 'No active torrent was found with that name.' }
+    elif args.has_key('url'):
+      try:    
+        status = self.torrent_server.torrent_at_url(name)
+      except: 
+        status = { 'code': 400, 'error_message': 'The torrent at that URL could not be loaded.' }
+    else:
+      status = self.torrent_server.status()
 
     self.send_response(200)
     self.end_headers()
@@ -49,7 +60,7 @@ class RestfulHandler(BaseHTTPRequestHandler):
         response['name'] = name
       else:
         response['code'] = 404
-        response['message'] = 'No torrent found.'
+        response['error_message'] = 'No torrent found.'
     except TorrentExistsException as e:
       response['code'] = 409
       response['error_message'] = 'The server is already running that torrent.'
@@ -83,17 +94,18 @@ class RestfulHandler(BaseHTTPRequestHandler):
   # Updates configuration settings.
   def do_PUT(self):
     (name, args) = self.parse_query()
-    response = { 'code': 200, 'old': {}, 'new': {} }
 
-    for key, value in args.items():
-      old_value = self.torrent_server.set(key, value)
-      if old_value != value:
-        response['old'][key] = old_value
-        response['new'][key] = value
+    handle = self.torrent_server.find(name)
+
+    if handle:
+      if args.has_key('path') and args.has_key('priority'):
+        self.torrent_server.set_file_priority(name, args['path'], int(args['priority']))
+    else:
+      for key, value in args.items():
+        self.torrent_server.set(key, value)
 
     self.send_response(200)
     self.end_headers()
-    self.wfile.write(json.dumps(response))
 
 
   # Parses a URL query field into a request name and an argument hash.
