@@ -16,6 +16,13 @@ def search(func, list):
   return reduce(searchfunc, list, None)
 
 
+def search_with_index(func, list):
+  for i in range(len(list)):
+    if func(list[i]):
+      return (list[i], i)
+  return None
+
+
 
 class TorrentServer:
   def __init__(self, config_file):
@@ -165,6 +172,18 @@ class TorrentServer:
   def handle_files(self, h):
     ti = h.get_torrent_info()
     return zip(ti.files(), h.file_progress(), h.file_priorities())
+
+
+  def set_file_priority(self, torrent_name, file_path, priority):
+    h = self.find(torrent_name)
+    if h:
+      (file, index) = search_with_index(lambda f: f.path == file_path, h.get_torrent_info().files())
+      priorities = h.file_priorities()
+      priorities[index] = priority
+      h.prioritize_files(priorities)
+      return True
+
+    return False
 
 
   # Search the active handles for a torrent with the given name.

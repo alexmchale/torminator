@@ -106,6 +106,7 @@ class RestfulHandler(BaseHTTPRequestHandler):
 
     self.send_response(200)
     self.end_headers()
+    self.wfile.write(json.dumps({}))
 
 
   # Parses a URL query field into a request name and an argument hash.
