@@ -203,6 +203,13 @@ class TorrentServer:
     self.if_set(self.session.set_upload_rate_limit, int, 'upload_rate_limit')
     self.if_set(self.session.set_download_rate_limit, int, 'download_rate_limit')
 
+    for t in self.settings['torrents']:
+      if not self.find(t['name']):
+        if self.add(t['url'], t['files']):
+          handle = self.find(t['name'])
+          status = self.handle_status(handle)
+          print "Resuming torrent:", status['name']
+
 
   # Reads the settings in the current session into the settings hash.
   def read_settings(self):
@@ -212,13 +219,9 @@ class TorrentServer:
     else:
       self.settings = {}
 
-    for key, value in self.DEFAULT_SETTINGS:
+    for (key, value) in self.DEFAULT_SETTINGS.items():
       if not self.settings.has_key(key):
         self.settings[key] = value
-
-    for t in self.settings['torrents']:
-      h = self.find(t['name'])
-      if not h: self.add(t['url'], t['files'])
 
 
   # Write the current settings in memory out to disk.
