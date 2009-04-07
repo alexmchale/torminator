@@ -26,14 +26,21 @@ def search_with_index(func, list):
 
 class TorrentServer:
   def __init__(self, config_file):
-    FIRST_TORRENT_PORT = 6881
-    LAST_TORRENT_PORT  = 6891
-
-    self.session = lt.session()
-    self.session.listen_on(FIRST_TORRENT_PORT, LAST_TORRENT_PORT)
+    self.DEFAULT_SETTINGS = {
+      'first_torrent_port': 6881,
+      'last_torrent_port':  6891,
+      'save_path':          '/tmp',
+      'complete_path':      '/media/MediaCenter/Downloads',
+      'torrents':           []
+    }
 
     self.config_file = config_file
     self.read_settings()
+
+    self.session = lt.session()
+    self.session.listen_on(self.settings['first_torrent_port'], self.settings['last_torrent_port'])
+
+    self.apply_settings()
 
 
   # Add the torrent at the given URL and return its name.
@@ -205,17 +212,13 @@ class TorrentServer:
     else:
       self.settings = {}
 
-    if not self.settings.has_key('save_path'):
-      self.settings['save_path'] = '/tmp'
+    for key, value in self.DEFAULT_SETTINGS:
+      if not self.settings.has_key(key):
+        self.settings[key] = value
 
-    if self.settings.has_key('torrents'):
-      for t in self.settings['torrents']:
-        h = self.find(t['name'])
-        if not h: self.add(t['url'], t['files'])
-    else:
-      self.settings['torrents'] = []
-
-    self.apply_settings()
+    for t in self.settings['torrents']:
+      h = self.find(t['name'])
+      if not h: self.add(t['url'], t['files'])
 
 
   # Write the current settings in memory out to disk.
