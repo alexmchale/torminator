@@ -33,8 +33,9 @@ class RestfulHandler(BaseHTTPRequestHandler):
         status = { 'code': 400, 'error_message': 'No active torrent was found with that name.' }
     elif args.has_key('url'):
       try:    
-        status = self.torrent_server.torrent_at_url(name)
-      except: 
+        status = self.torrent_server.torrent_at_url(args['url'])
+      except Exception as e:
+        print 'Bad URL:', e 
         status = { 'code': 400, 'error_message': 'The torrent at that URL could not be loaded.' }
     else:
       status = self.torrent_server.status()
