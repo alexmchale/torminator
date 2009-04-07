@@ -27,11 +27,13 @@ def search_with_index(func, list):
 class TorrentServer:
   def __init__(self, config_file):
     self.DEFAULT_SETTINGS = {
-      'first_torrent_port': 6881,
-      'last_torrent_port':  6891,
-      'save_path':          '/tmp',
-      'complete_path':      '/media/MediaCenter/Downloads',
-      'torrents':           []
+      'first_torrent_port':  6881,
+      'last_torrent_port':   6891,
+      'save_path':           '/tmp',
+      'complete_path':       '/media/MediaCenter/Downloads',
+      'upload_rate_limit':   0,
+      'download_rate_limit': 0,
+      'torrents':            []
     }
 
     self.config_file = config_file
