@@ -87,14 +87,14 @@ class TorrentServer:
 
   # Remove the torrent with the given name from the server.
   def remove(self, torrent_name):
-    t = search(lambda t: t['name'] == ti.name(), self.settings['torrents'])
+    t = search(lambda t: t['name'] == torrent_name, self.settings['torrents'])
     if t:
       self.settings['torrents'].remove(t)
     self.write_settings()
 
     h = self.find(torrent_name)
     if h:
-      self.session.remove_torrent(h)
+      self.session.remove_torrent(h, lt.options_t.delete_files)
       return True
 
     return False
