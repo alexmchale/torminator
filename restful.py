@@ -40,9 +40,7 @@ class RestfulHandler(BaseHTTPRequestHandler):
     else:
       status = self.torrent_server.status()
 
-    self.send_response(200)
-    self.end_headers()
-    self.wfile.write(json.dumps(status))
+    self.respond(status)
 
 
   # Post sends a new torrent file.
@@ -56,7 +54,7 @@ class RestfulHandler(BaseHTTPRequestHandler):
       if len(files) > 0:
         (torrent_url, files_to_include) = (files[0], files[1:])
         name = self.torrent_server.add(torrent_url, files_to_include)
-        response['code'] = 200
+        response['code'] = 201
         response['message'] = 'The torrent was successfully added.'
         response['name'] = name
       else:
@@ -67,29 +65,22 @@ class RestfulHandler(BaseHTTPRequestHandler):
       response['error_message'] = 'The server is already running that torrent.'
       response['name'] = e.handle.name()
     except Exception as e:
-      response['code'] = 400
+      response['code'] = 500
       response['error_message'] = e.message
 
-    self.send_response(response['code'])
-    self.end_headers()
-    self.wfile.write(json.dumps(response))
+    self.respond(response)
 
 
   # Remove the given torrent from the server.
   def do_DELETE(self):
     (name, args) = self.parse_query()
-    response = {}
 
     if self.torrent_server.remove(name):
-      response['code'] = 200
-      response['message'] = 'The torrent was successfully removed.'
+      response = { 'code': 200, 'message': 'The torrent was successfully removed.' }
     else:
-      response['code'] = 200
-      response['error_message'] = 'That torrent was not found.'
+      response = { 'code': 404, 'error_message': 'That torrent was not found.' }
 
-    self.send_response(response['code'])
-    self.end_headers()
-    self.wfile.write(json.dumps(response))
+    self.respond(response)
 
 
   # Updates configuration settings.
@@ -105,9 +96,7 @@ class RestfulHandler(BaseHTTPRequestHandler):
       for key, value in args.items():
         self.torrent_server.set(key, value)
 
-    self.send_response(200)
-    self.end_headers()
-    self.wfile.write(json.dumps({}))
+    self.respond({ 'code': 200 })
 
 
   # Parses a URL query field into a request name and an argument hash.
@@ -139,6 +128,18 @@ class RestfulHandler(BaseHTTPRequestHandler):
   # Read the data sent by the client.
   def read_data(self):
     return self.rfile.read(int(self.headers["content-length"]))
+
+
+  # Dispatch the given response to the client.
+  def respond(self, response):
+    if response.has_key('code'):
+      code = response['code']
+    else:
+      code = 200
+
+    self.send_response(code)
+    self.end_headers()
+    self.wfile.write(json.dumps(response))
 
 
 
