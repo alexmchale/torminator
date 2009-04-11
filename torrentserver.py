@@ -24,6 +24,23 @@ def search_with_index(func, list):
 
 
 
+class MonitorThread(Thread):
+  def __init__(self, server):
+    Thread.__init__(self)
+    self.server = server
+
+
+  def run(self):
+    while 1:
+      alert = self.server.session.pop_alert()
+
+      if alert:
+        self.server.do_alert(alert)
+      else:
+        time.sleep(1)
+
+
+
 class TorrentServer:
   def __init__(self, config_file):
     self.DEFAULT_SETTINGS = {
@@ -43,6 +60,9 @@ class TorrentServer:
     self.session.listen_on(self.settings['first_torrent_port'], self.settings['last_torrent_port'])
 
     self.apply_settings()
+
+    self.monitor_thread = MonitorThread(self)
+    self.monitor_thread.start()
 
 
   # Add the torrent at the given URL and return its name.
@@ -252,6 +272,11 @@ class TorrentServer:
   def if_set(self, func, cast, key):
     if self.settings.has_key(key):
       func(cast(self.settings[key]))
+
+
+  # Handles an alert from libtorrent.
+  def do_alert(self, alert):
+    pass
 
 
 
