@@ -102,6 +102,8 @@ class RestfulHandler(BaseHTTPRequestHandler):
   # Parses a URL query field into a request name and an argument hash.
   def parse_query(self):
     (name, argstr) = re.search('^/*([^?]*)\\?*([^?]*?)$', self.path).groups()
+
+    name = urllib.unquote(name)
     args = {}
 
     for pairs in argstr.split('&'):
