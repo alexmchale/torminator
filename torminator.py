@@ -15,13 +15,17 @@ from torrentserver import TorrentServer
 
 
 def main():
-  torrent_server = TorrentServer("/home/amchale/.torminator.conf")
-  restful_server = HTTPServer(('', 3001), RestfulHandler)
+  try:
+    torrent_server = TorrentServer("/home/amchale/.torminator.conf")
+    restful_server = HTTPServer(('', 3001), RestfulHandler)
 
-  torrent_server.restful_server = restful_server
-  restful_server.torrent_server = torrent_server
+    torrent_server.restful_server = restful_server
+    restful_server.torrent_server = torrent_server
 
-  restful_server.serve_forever()
+    restful_server.serve_forever()
+  except KeyboardInterrupt as e:
+    print "Keyboard interrupt.  Exiting."
+    quit()
 
 
     
