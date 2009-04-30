@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 import string, cgi, time, urllib
 from threading import Thread
 import thread
